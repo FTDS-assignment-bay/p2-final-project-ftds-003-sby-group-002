@@ -1,0 +1,214 @@
+'''
+=================================================
+Final Project
+
+Team Names :  -GROUP 02-
+Data Science: Rhesa Akbar Elvarettano
+Data Analysis: Rio Ardiarta Makhiyyuddin
+Data Engineer: Yolanda Krisnadita
+
+Batch : FTDS-003-SBY 
+
+This program was created to automate the transform and load data from PostgreSQL to ElasticSearch. 
+The dataset used is the dataset about HomeCredit Default Risk in 2018.
+=================================================
+'''
+
+# -- URL dataset.
+Home Credit Default Risk
+https://www.kaggle.com/competitions/home-credit-default-risk/overview
+
+# -- Alur Pengerjaan
+'''
+Dalam dataset ini terdapat 6 Table masing-masing tablenya ini akan dimasukan semua kedalam PostgreSQL. 
+Dimana ada 2 table utama dan 4 table berisikan behavioral data.
+-- Main Data 01
+--- Bureau Table: Semua kredit klien sebelumnya yang diberikan oleh lembaga keuangan lain yang dilaporkan ke Biro Kredit.
+---- Primary Key: SK_BUREAU_ID
+---- Foreign Key: SK_ID_CURR
+
+-- Main Data 02
+--- Previous Application: Semua pengajuan pinjaman Home Credit sebelumnya dari nasabah yang memiliki pinjaman dalam sampel kami.
+---- Primary Key: SK_ID_PREV 
+---- Foreign Key: SK_ID_CURR
+
+-- Behavioral Data 01
+--- Bureau Balance: Saldo bulanan kredit sebelumnya di Biro Kredit.
+---- Primary Key: {tidak memiliki primary key} 
+---- Foreign Key: SK_BUREAU_ID
+
+-- Behavioral Data 02
+POS Cash Balance: Cuplikan saldo bulanan dari POS (point of sales) sebelumnya dan pinjaman tunai yang dimiliki pemohon dengan Home Credit.
+---- Primary Key: {tidak memiliki primary key} 
+---- Foreign Key: SK_ID_PREV
+---- Foreign Key: SK_ID_CURR
+
+-- Behavioral Data 03
+Credit Card Balance: Cuplikan saldo bulanan dari kartu kredit sebelumnya yang dimiliki pemohon dengan Home Credit.
+---- Primary Key: {tidak memiliki primary key} 
+---- Foreign Key: SK_ID_PREV 
+---- Foreign Key: SK_ID_CURR
+
+-- Behavioral Data 04
+Installments Payments: Riwayat pembayaran untuk kredit yang telah dicairkan sebelumnya di Home Credit yang terkait dengan pinjaman dalam sampel kami.
+---- Primary Key: {tidak memiliki primary key} 
+---- Foreign Key: SK_ID_PREV 
+---- Foreign Key: SK_BUREAU_ID
+---- Foreign Key: SK_ID_CURR
+
+Lalu akan di combine menjadi satu sebagai data yang akan di train.
+'''
+# -- Syntax DDL for create database and table. 01
+CREATE TABLE bureau_table (
+	"SK_ID_CURR" integer,
+    "SK_BUREAU_ID" integer,
+    "CREDIT_ACTIVE" varchar(255),
+    "CREDIT_CURRENCY" varchar(255),
+    "DAYS_CREDIT" integer, 
+    "CREDIT_DAY_OVERDUE" integer,
+    "DAYS_CREDIT_ENDDATE" float,
+    "DAYS_ENDDATE_FACT" float,
+    "AMT_CREDIT_MAX_OVERDUE" float,
+    "CNT_CREDIT_PROLONG" integer,
+    "AMT_CREDIT_SUM" float
+    "AMT_CREDIT_SUM_DEBT"
+    "AMT_CREDIT_SUM_LIMIT"
+    "AMT_CREDIT_SUM_OVERDUE"
+    "CREDIT_TYPE" varchar(255),
+    "DAYS_CREDIT_UPDATE" integer,
+    "AMT_ANNUITY" integer
+);
+
+# -- Syntax DML for inserting data to database. 
+\copy bureau_table from '/Users/yoland-mac/Downloads/bureau.csv' DELIMITER ',' CSV HEADER;
+
+# -- Syntax DDL for create database and table. 02
+CREATE TABLE previous_application (
+	"SK_ID_PREV" integer,
+    "SK_ID_CURR" integer,
+    "NAME_CONTRACT_TYPE" varchar(255),
+    "AMT_ANNUITY" float,
+    "AMT_APPLICATION" float,
+    "AMT_CREDIT" float,
+    "AMT_DOWN_PAYMENT" float,
+    "AMT_GOODS_PRICE" float,
+    "WEEKDAY_APPR_PROCESS_START" varchar(255),
+    "HOUR_APPR_PROCESS_START" integer,
+    "FLAG_LAST_APPL_PER_CONTRACT" float,
+    "NFLAG_LAST_APPL_IN_DAY" integer,
+    "NFLAG_MICRO_CASH" float,
+    "RATE_DOWN_PAYMENT" float,
+    "RATE_INTEREST_PRIMARY" float,
+    "RATE_INTEREST_PRIVILEGED" float,
+    "NAME_CASH_LOAN_PURPOSE" varchar(255),
+    "NAME_CONTRACT_STATUS" varchar(255), 
+    "DAYS_DECISION" integer,
+    "NAME_PAYMENT_TYPE" varchar(255),
+    "CODE_REJECT_REASON" varchar(255),
+    "NAME_TYPE_SUITE" varchar(255),
+    "NAME_CLIENT_TYPE" varchar(255),
+    "NAME_GOODS_CATEGORY" varchar(255),
+    "NAME_PORTFOLIO" varchar(255),
+    "NAME_PRODUCT_TYPE" varchar(255)
+    "CHANNEL_TYPE" varchar(255),
+    "SELLERPLACE_AREA" integer, 
+    "NAME_SELLER_INDUSTRY" varchar(255),
+    "CNT_PAYMENT" float,
+    "NAME_YIELD_GROUP" varchar(255),
+    "PRODUCT_COMBINATION" varchar(255),
+    "DAYS_FIRST_DRAWING" float,
+    "DAYS_FIRST_DUE" float,
+    "DAYS_LAST_DUE_1ST_VERSION" float,
+    "DAYS_LAST_DUE" float,
+    "DAYS_TERMINATION" float,
+    "NFLAG_INSURED_ON_APPROVAL" integer
+);
+
+# -- Syntax DML for inserting data to database.
+\copy bureau_table from '/Users/yoland-mac/Downloads/previous_application.csv' DELIMITER ',' CSV HEADER;
+
+# -- Syntax DDL for create database and table. 03
+CREATE TABLE bureau_balance (
+    "SK_BUREAU_ID" integer,
+    "MONTHS_BALANCE" float,
+    "STATUS" varchar(255)	
+);
+
+# -- Syntax DML for inserting data to database.
+\copy bureau_table from '/Users/yoland-mac/Downloads/bureau_balance.csv' DELIMITER ',' CSV HEADER;
+
+# -- Syntax DDL for create database and table. 04
+CREATE TABLE POS_CASH_balance (
+    "SK_ID_PREV" integer,
+    "SK_ID_CURR" integer,
+    "MONTHS_BALANCE" integer,
+    "CNT_INSTALMENT" float,
+    "CNT_INSTALMENT_FUTURE" float,
+    "NAME_CONTRACT_STATUS" varchar(255),
+    "SK_DPD" integer,
+    "SK_DPD_DEF" integer,
+);
+
+# -- Syntax DML for inserting data to database.
+\copy bureau_table from '/Users/yoland-mac/Downloads/POS_CASH_balance.csv' DELIMITER ',' CSV HEADER;
+
+# -- Syntax DDL for create database and table. 05
+CREATE TABLE credit_card_balance (
+    "SK_ID_PREV" integer, 
+    "SK_ID_CURR" integer,
+    "MONTHS_BALANCE" float,
+    "AMT_BALANCE" integer,
+    "AMT_CREDIT_LIMIT_ACTUAL" float,
+    "AMT_DRAWINGS_ATM_CURRENT" float,
+    "AMT_DRAWINGS_CURRENT" float,
+    "AMT_DRAWINGS_OTHER_CURRENT" float,
+    "AMT_DRAWINGS_POS_CURRENT" float,
+    "AMT_INST_MIN_REGULARITY" float,
+    "AMT_PAYMENT_CURRENT" float,
+    "AMT_PAYMENT_TOTAL_CURRENT" float,
+    "AMT_RECEIVABLE_PRINCIPAL" float,
+    "AMT_RECIVABLE" float,
+    "AMT_TOTAL_RECEIVABLE" float,
+    "CNT_DRAWINGS_ATM_CURRENT" float,
+    "CNT_DRAWINGS_CURRENT" integer,
+    "CNT_DRAWINGS_OTHER_CURRENT" float,
+    "CNT_DRAWINGS_POS_CURRENT" float,
+    "CNT_INSTALMENT_MATURE_CUM" float,
+    "NAME_CONTRACT_STATUS" varchar(255),
+    "SK_DPD" integer,
+    "SK_DPD_DEF" integer,
+);
+
+# -- Syntax DML for inserting data to database.
+\copy bureau_table from '/Users/yoland-mac/Downloads/credit_card_balance.csv' DELIMITER ',' CSV HEADER;
+
+# -- Syntax DDL for create database and table. 06
+CREATE TABLE installments_payments (
+    "SK_ID_PREV" integer,
+    "SK_ID_CURR" integer,
+    "NUM_INSTALMENT_VERSION" float,
+    "NUM_INSTALMENT_NUMBER" integer,
+    "DAYS_INSTALMENT" float,
+    "DAYS_ENTRY_PAYMENT" float,
+    "AMT_INSTALMENT" float,
+    "AMT_PAYMENT" float,
+);
+
+# -- Syntax DML for inserting data to database.
+\copy bureau_table from '/Users/yoland-mac/Downloads/installments_payments.csv' DELIMITER ',' CSV HEADER;
+
+# -- Syntax JOINING the Table
+SELECT m.SK_ID_CURR,
+       b.*,
+       pa.*,
+       bb.*,
+       pc.*,
+       cc.*,
+       ip.*
+FROM main_data m
+LEFT JOIN bureau b ON m.SK_ID_CURR = b.SK_ID_CURR
+LEFT JOIN previous_application pa ON m.SK_ID_CURR = pa.SK_ID_CURR
+LEFT JOIN bureau_balance bb ON b.SK_BUREAU_ID = bb.SK_BUREAU_ID
+LEFT JOIN pos_cash_balance pc ON m.SK_ID_CURR = pc.SK_ID_CURR AND pa.SK_ID_PREV = pc.SK_ID_PREV
+LEFT JOIN credit_card_balance cc ON m.SK_ID_CURR = cc.SK_ID_CURR AND pa.SK_ID_PREV = cc.SK_ID_PREV
+LEFT JOIN installments_payments ip ON m.SK_ID_CURR = ip.SK_ID_CURR AND pa.SK_ID_PREV = ip.SK_ID_PREV AND b.SK_BUREAU_ID = ip.SK_BUREAU_ID;
